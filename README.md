@@ -66,7 +66,7 @@ python -m pip install -r requirements.txt
 Create a local `.env` file using [.env.example](.env.example) as a reference:
 
 ```sh
-cp .env.example .env
+cp -r .env.example .env
 ```
 
 ```dotenv
@@ -76,8 +76,7 @@ BACS_CHEAP_MODEL=gpt-4o-mini
 BACS_FRONTIER_MODEL=gpt-4.1
 ```
 
-Replace the placeholders with your own key, endpoint and model IDs. `OPENAI_BASE_URL` can point to any compatible provider. `load_env()` reads the file without overriding variables already set in your shell. The `.env` file is git-ignored, so keep your key there and never in the code.
-
+Replace the placeholders with your own key, endpoint and model IDs. `OPENAI_BASE_URL` can point to any compatible provider.
 ## Data Sources
 
 See [data/README.md](data/README.md) for how to prepare a study from the sources below.
@@ -131,25 +130,6 @@ Other flags:
 - `--no-control`: switch off the zero-call control.
 - `--attention-only`: keep exposure flips in the control and leave out decision flips.
 
-Live agents run from Python:
-
-```python
-import os
-
-from openai import OpenAI
-from bacs import ChatLogprobModel, ModelPair, Query, Settings, SocialGraph, load_env, run_query
-
-load_env()
-graph = SocialGraph.from_edges(num_agents, edges, communities, personas)
-client = OpenAI()
-models = ModelPair(
-    cheap=ChatLogprobModel(client, os.environ["BACS_CHEAP_MODEL"], input_price=0.15e-6, output_price=0.6e-6),
-    frontier=ChatLogprobModel(client, os.environ["BACS_FRONTIER_MODEL"], input_price=2e-6, output_price=8e-6),
-)
-query = Query(post_text, seeds=(12, 40, 77), rounds=6, attention=0.3)
-report = run_query(graph, query, models, Settings(budget=5.0))
-print(report["reach"])
-```
 
 The prices above are placeholders. [`Settings`](bacs/estimator.py) also holds the tolerances, the error level, the pilot sizes and the epoch length.
 
