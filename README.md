@@ -60,13 +60,23 @@ python -m pip install -r requirements.txt
 
 [requirements.txt](requirements.txt) lists NumPy, the OpenAI client for live agents.
 
-## Language Models
+### API keys
 
-[`ChatLogprobModel`](bacs/models.py) wraps any OpenAI-compatible chat client. It asks for a one-word Yes or No answer and reads the share probability from the first-token log-probabilities. It also bills each call from its token usage. The `OpenAI()` client reads `OPENAI_API_KEY` and, for other compatible endpoints, `OPENAI_BASE_URL` from the environment.
 
-Set `input_price` and `output_price` to the per-token prices on your provider's price list. Both the budget and the surrogate pricing are measured in these costs.
+Create a local `.env` file using [.env.example](.env.example) as a reference:
 
-If an API returns only sampled answers, a decision has no known chance. The control then uses exposure flips alone, and share rates are learned from earlier runs. Return such answers with no probability and a sampled `shared` flag. [`SampledTableModel`](bacs/models.py) shows the shape.
+```sh
+cp .env.example .env
+```
+
+```dotenv
+OPENAI_API_KEY=your-api-key
+OPENAI_BASE_URL=https://api.openai.com/v1
+BACS_CHEAP_MODEL=gpt-4o-mini
+BACS_FRONTIER_MODEL=gpt-4.1
+```
+
+Replace the placeholders with your own key, endpoint and model IDs. `OPENAI_BASE_URL` can point to any compatible provider. `load_env()` reads the file without overriding variables already set in your shell. The `.env` file is git-ignored, so keep your key there and never in the code.
 
 ## Data Sources
 
@@ -124,14 +134,17 @@ Other flags:
 Live agents run from Python:
 
 ```python
-from openai import OpenAI
-from bacs import ChatLogprobModel, ModelPair, Query, Settings, SocialGraph, run_query
+import os
 
+from openai import OpenAI
+from bacs import ChatLogprobModel, ModelPair, Query, Settings, SocialGraph, load_env, run_query
+
+load_env()
 graph = SocialGraph.from_edges(num_agents, edges, communities, personas)
 client = OpenAI()
 models = ModelPair(
-    cheap=ChatLogprobModel(client, "gpt-4o-mini", input_price=0.15e-6, output_price=0.6e-6),
-    frontier=ChatLogprobModel(client, "gpt-4.1", input_price=2e-6, output_price=8e-6),
+    cheap=ChatLogprobModel(client, os.environ["BACS_CHEAP_MODEL"], input_price=0.15e-6, output_price=0.6e-6),
+    frontier=ChatLogprobModel(client, os.environ["BACS_FRONTIER_MODEL"], input_price=2e-6, output_price=8e-6),
 )
 query = Query(post_text, seeds=(12, 40, 77), rounds=6, attention=0.3)
 report = run_query(graph, query, models, Settings(budget=5.0))
@@ -160,6 +173,7 @@ BACS-LLM/
 │   └── __main__.py        runs the command line with python -m bacs
 ├── data/                  guide to preparing study data
 ├── requirements.txt       Python dependencies
+├── .env.example           template for API keys and model IDs
 └── LICENSE                MIT license
 ```
 

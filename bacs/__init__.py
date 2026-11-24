@@ -26,6 +26,7 @@ from .models import (
     Prompt,
     SampledTableModel,
     TableModel,
+    load_env,
     share_probability,
 )
 from .pricing import block_variance, margin, price, regression_coefficient
@@ -71,6 +72,7 @@ __all__ = [
     "fit_isotonic",
     "fit_value_tables",
     "hub_frontier",
+    "load_env",
     "margin",
     "no_control",
     "price",

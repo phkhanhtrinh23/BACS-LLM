@@ -3,3 +3,4 @@ docs/*.pdf
 __pycache__/
 *.egg-info/
 .pytest_cache/
+.env
